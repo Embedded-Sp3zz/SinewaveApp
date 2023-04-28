@@ -1,3 +1,14 @@
+"""
+SinewaveApp.py Version 1.0
+
+Written by: Brian Hinger 4/28/2023
+
+Real-time Sinewave Plotting and Data Saving with PyQt5
+
+This project consists of two Python scripts, sinewave_generator.py and SinewaveApp.py, which together form a simple, user-friendly GUI application
+using PyQt5 that allows users to plot a real-time, randomly generated sinewave and save the data at specified intervals.
+"""
+
 # Import our sinewave generator
 from sinewave_generator import SinewaveGenerator
 
