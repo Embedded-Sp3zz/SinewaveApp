@@ -13,6 +13,23 @@ from matplotlib.figure import Figure
 
 # Constants
 SAMPLE_RATE = 100    # samples / s
+WINDOW_WIDTH = 800
+WINDOW_HEIGHT = 600
+WINDOW_X_POSITION = 100
+WINDOW_Y_POSITION = 100
+CANVAS_WIDTH = 8
+CANVAS_HEIGHT = 4
+CANVAS_DPI = 100
+SLIDER_MIN = 1
+SLIDER_MAX = 50
+SLIDER_INIT_VALUE = 10
+PLOT_UPDATE_INTERVAL = 100  # ms
+DATA_GEN_INTERVAL = 1000  # ms, adjust this based on sample rate
+SAVE_DATA_INTERVAL = 1000  # ms
+SAVE_ALL_DATA_INTERVAL = 300000  # ms
+PLOT_TIME_FRAME = 3  # seconds
+MAX_DATA_POINTS = SAMPLE_RATE * 60 * 5  # Store data of last 5 minutes
+
 
 # Function to create a data folder if it does not exist
 def create_data_folder():
@@ -38,7 +55,7 @@ class SinewaveApp(QMainWindow):
     def init_ui(self):
         # Set Window Title and Position
         self.setWindowTitle(self.title)
-        self.setGeometry(100, 100, 800, 600)
+        self.setGeometry(WINDOW_X_POSITION, WINDOW_Y_POSITION, WINDOW_WIDTH, WINDOW_HEIGHT)
 
         # Layout
         layout = QVBoxLayout()
@@ -55,9 +72,9 @@ class SinewaveApp(QMainWindow):
 
         # Frequency Slider
         self.freq_slider = QSlider(Qt.Horizontal)
-        self.freq_slider.setMinimum(1)
-        self.freq_slider.setMaximum(50)
-        self.freq_slider.setValue(10)
+        self.freq_slider.setMinimum(SLIDER_MIN)
+        self.freq_slider.setMaximum(SLIDER_MAX)
+        self.freq_slider.setValue(SLIDER_INIT_VALUE)
         self.freq_slider.valueChanged.connect(self.freq_changed)
         layout.addWidget(self.freq_slider)
 
@@ -107,7 +124,7 @@ class SinewaveApp(QMainWindow):
 # Class for the plotting canvas
 class PlotCanvas(FigureCanvas):
     # Constructor
-    def __init__(self, parent=None, width=8, height=4, dpi=100):
+    def __init__(self, parent=None, width=CANVAS_WIDTH, height=CANVAS_HEIGHT, dpi=CANVAS_DPI):
         fig = Figure(figsize=(width, height), dpi=dpi)
         self.axes = fig.add_subplot(111)
 
@@ -121,7 +138,7 @@ class PlotCanvas(FigureCanvas):
         # Initialize the sinewave generator
         self.sinewave_generator = SinewaveGenerator(sample_rate=SAMPLE_RATE)
 
-        self.max_data_points = SAMPLE_RATE * 60 * 5  # Store data of last 5 minutes
+        self.max_data_points = MAX_DATA_POINTS  # Store data of last 5 minutes
 
         # Initialize the sinewave data and frequency
         self.freq = 1
@@ -137,22 +154,22 @@ class PlotCanvas(FigureCanvas):
         # Set up timers for plot update and data saving
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_plot)
-        self.timer.start(100)
+        self.timer.start(PLOT_UPDATE_INTERVAL)
 
         # Timer for generating sinewave data
         self.sinewave_gen_timer = QTimer()
         self.sinewave_gen_timer.timeout.connect(self.sinewave_generator.generate_data)
-        self.sinewave_gen_timer.start(int(1000 / self.sinewave_generator.sample_rate))  # Adjust the interval to match the sample rate
+        self.sinewave_gen_timer.start(int(DATA_GEN_INTERVAL / self.sinewave_generator.sample_rate))  # Adjust the interval to match the sample rate
 
         # Timer for saving data every second
         self.save_data_timer = QTimer()
         self.save_data_timer.timeout.connect(self.save_data)
-        self.save_data_timer.start(1000)
+        self.save_data_timer.start(SAVE_DATA_INTERVAL)
 
         # Timer for saving all data every 5 minutes
         self.save_all_data_timer = QTimer()
         self.save_all_data_timer.timeout.connect(self.save_all_data)
-        self.save_all_data_timer.start(300000)
+        self.save_all_data_timer.start(SAVE_ALL_DATA_INTERVAL)
 
     # Function to stop plotting
     def stop_plotting(self):
@@ -176,7 +193,7 @@ class PlotCanvas(FigureCanvas):
     # Function to update the plot
     def update_plot(self):
         # Calculate the number of samples in the most recent 3 seconds
-        recent_samples = self.sinewave_generator.sample_rate * 3
+        recent_samples = self.sinewave_generator.sample_rate * PLOT_TIME_FRAME
 
         # Get the most recent 3 seconds of data
         recent_sinewave_data = self.sinewave_generator.sinewave_data[-recent_samples:]
